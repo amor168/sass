@@ -1,0 +1,286 @@
+@import "./../styles/function.scss";
+@keyframes rotate {
+  0% { transform: rotate(0turn)}
+  50% { transform: rotate(.5turn)}
+  100% { transform: rotate(1turn)}
+}
+@mixin halfPie($r, $baseColor){
+  width: $r*2;
+  height: $r*2;
+  border-radius: 50%;
+  background: $baseColor;
+  color: transparent;
+  &::before{
+    content: '';
+    display: block;
+    margin-left: 50%;
+    height: 100%;
+    border-radius: 0 100% 100% 0 / 50%;
+    transform-origin: left;
+    background-color: inherit;
+    background-image: linear-gradient(to right, transparent 0%, lighten($baseColor, 5) 0);
+  }
+}
+@mixin dot($r, $cx, $cy, $color) {
+  position: absolute;
+  top: $cy - $r;
+  left: $cx - $r;
+  width: $r * 2;
+  height: $r * 2;
+  border-radius: 50%;
+  background: $color;
+}
+@mixin line($baseLength, $length, $deg, $basex, $basey, $color){
+  position: absolute;
+  top: $baseLength * $basey;
+  left: $baseLength * $basex;
+  width: $baseLength * $length;
+  border: 1px solid $color;
+  transform-origin: left;
+  transform: rotate($deg);
+}
+@mixin point($baseLength, $basex, $basey, $color){
+  position: absolute;
+  top: $baseLength * $basey;
+  left: $baseLength * $basex;
+  background: $color
+}
+
+// background-color
+$background-color: #f0f3f7;
+$baseLength: 2px;
+$lighten-grey: #bacad9;
+$lighten-red: #ebced2;
+
+// top left element arguments
+$LT-color-left: $lighten-grey;
+$LT-color-right: $lighten-red;
+$LT-color-bond: #d8e1e9;
+$LT-baseLength: $baseLength;
+// top right element arguments
+$RT-right: 100px;
+$RT-top: 100px;
+$RT-baseLength: $baseLength;
+
+// bottom right element arguments
+$RB-right: 110px;
+$RB-bottom: 200px;
+$RB-baseLength: $baseLength;
+
+// bottom left element arguments
+$LB-left: 180px;
+$LB-bottom: 120px;
+$LB-color: $lighten-grey;
+$LB-baseLength: $baseLength;
+
+.rotating_around {
+  animation: rotate 15s linear infinite;
+}
+
+.tiny {
+  width: $baseLength * 2;
+  height: $baseLength * 2;
+}
+
+.dot {
+  border-radius: 50%;
+}
+
+#main-background {
+  background-color: $background-color;
+  position: fixed;
+  top:0; left: 0;
+  height: 100%;
+  width: 100%;
+  #lt {
+    //中心圆(element_left)的top和left 以及圆心的坐标
+    $center_top: 0px;  $center_left: 0px;
+    $circle_top: $center_top + 10px;   $circle_left: $center_left + 10px;
+
+   //中心圆(element_left)和element_right的连线坐标的确定
+    $element_right_top: $LT-baseLength * 60;  $element_right_left: $LT-baseLength * 80;
+    $bond_center_right: sqrt(($circle_top - $element_right_top) * ($circle_top - $element_right_top) / 1px + ($circle_left - $element_right_left) * ($circle_left - $element_right_left )/ 1px ) - 10px - 2px;
+    $bond_degree: toDeg( atan(($circle_top - $element_right_top) / ($circle_top - $element_right_left)) ) + 180deg;
+
+    position: fixed;
+    top: $LT-baseLength * 50; left: $LT-baseLength * 50;
+    width: $LT-baseLength * 80;  height: $LT-baseLength * 60;
+    &__element_left {
+      position: absolute;
+      top: 0; left: 0;
+      @include halfPie($LT-baseLength * 5, $LT-color-left);
+      border: 0 solid transparent;
+      box-shadow: 0 0 0 $LT-baseLength * 5 lighten($LT-color-left, 9), 0 0 0 $LT-baseLength * 10 lighten($LT-color-left, 13.8);
+    }
+    &__element_right {
+      position: absolute;
+      top: $element_right_top; left: $element_right_left;
+      @include halfPie($LT-baseLength * 3, $LT-color-right);
+      border: 0 solid transparent;
+      box-shadow: 0 0 0 $LT-baseLength * 11 $background-color, 0 0 0 $LT-baseLength * 12 #e4e9f1;
+      &__point-1 {@include point($LT-baseLength , 1.5, -24, $LT-color-right)}
+      &__point-2 {@include point($LT-baseLength , -20, 12, $LT-color-right)}
+      &__point-3 {@include point($LT-baseLength , 25, 12, $LT-color-right)}
+    }
+    //颜色$LT-color-bond
+    &__bond_left-right{@include line($LT-baseLength, $bond_center_right / $LT-baseLength , $bond_degree, $element_right_left / $LT-baseLength, $element_right_top / $LT-baseLength, $LT-color-bond)}
+  }
+  #rt {
+     //中心圆top和left 以及 圆心的坐标
+     $center_top: -4 * $RT-baseLength;  $center_left: -5 * $RT-baseLength;
+     $circle_top: $center_top + 10px;   $circle_left: $center_left + 10px;
+
+     //实心圆和中心圆之间的连线
+     $point_1_top:  $RT-baseLength * 24;   $point_1_left:  -26 * $RT-baseLength;
+     $bond1_center_length: sqrt(($circle_top - $point_1_top) * ($circle_top - $point_1_top) / 1px + ($circle_left - $point_1_left) * ($circle_left - $point_1_left )/ 1px ) - 14.8px;
+     $bond1_degree: toDeg( atan(($circle_top - $point_1_top) / ($circle_top - $point_1_left)) );
+
+     //虚心圆和中心圆之间的连线
+     $point_2_top:  -$RT-baseLength * 20;   $point_2_left:  -$baseLength * 40;
+     $bond2_center_length: sqrt(($circle_top - $point_2_top) * ($circle_top - $point_2_top) / 1px + ($circle_left - $point_2_left) * ($circle_left - $point_2_left )/ 1px ) - 14.8px;
+     $bond2_degree: toDeg( atan(($circle_top - $point_2_top) / ($circle_top - $point_2_left)) );
+
+     position: fixed;
+     right: $RT-right; top: $RT-top;
+     &__point-center {
+        position: absolute;
+        top: $center_top;
+        left: $center_left;
+        @include halfPie($RT-baseLength * 5, lighten($LB-color, 8));
+        border: 0 solid transparent;
+        box-shadow: 0 0 0 $RT-baseLength * 2 $background-color, 0 0 0 $RT-baseLength * 2.4 lighten($lighten-grey, 5.8);
+        transform: rotate(.3turn)
+      }
+     &__point-outer-1 {@include point($RT-baseLength, $point_1_left / $RT-baseLength, $point_1_top / $RT-baseLength, $lighten-red)}
+     &__point-outer-2 {
+        @include point($RT-baseLength, $point_2_left / $RT-baseLength, $point_2_top / $RT-baseLength, $background-color);
+        border: 0 solid transparent;
+        box-shadow: 0 0 0 $RT-baseLength * 1 $background-color, 0 0 0 $RT-baseLength * 1.4 lighten($lighten-grey, 5.8);
+     }
+      &__bond_center-outer-1 {
+        @include line($RT-baseLength, $bond1_center_length / $RT-baseLength, $bond1_degree, $point_1_left / $RT-baseLength, ($point_1_top + 2px) / $RT-baseLength, lighten($lighten-grey, 8) );
+        z-index: -1;
+      }
+      &__bond_center-outer-2 {
+        @include line($RT-baseLength, $bond2_center_length / $RT-baseLength, $bond2_degree, $point_2_left / $RT-baseLength, $point_2_top / $RT-baseLength, lighten($lighten-grey, 8) );
+        z-index: -1;
+      }
+   }
+
+  #rb {
+    //中心圆top和left 以及 圆心的坐标
+     $center_top: -7 * $RB-baseLength;  $center_left: -7 * $RB-baseLength;
+     $circle_top: $center_top + 14px;   $circle_left: $center_left + 14px;
+
+    //point-outer-1和中心圆之间的连线 top:0 left:0  width:120px
+    $point_1_top: 0px;   $point_1_left:  -$RB-baseLength * 60;
+    $bond1_center_length: sqrt(($circle_top - $point_1_top) * ($circle_top - $point_1_top) / 1px + ($circle_left - $point_1_left) * ($circle_left - $point_1_left )/ 1px );
+    $bond1_degree: toDeg( acot( $point_1_top / $point_1_left) );
+
+    //point-outer-2和中心圆之间的连线 top:0 left:0  width:89.4px
+    $point_2_top: -$RB-baseLength * 20;   $point_2_left:  $RB-baseLength * 40;
+    $bond2_center_length: sqrt(($circle_top - $point_2_top) * ($circle_top - $point_2_top) / 1px + ($circle_left - $point_2_left) * ($circle_left - $point_2_left )/ 1px );
+    $bond2_degree: toDeg( atan( $point_2_top / $point_2_left) );
+
+    //point-outer-3和中心圆之间的连线 top:0 left:0  width:178.8px
+    $point_3_top: $RB-baseLength * 80;   $point_3_left:  $RB-baseLength * 40;
+    $bond3_center_length: sqrt(($circle_top - $point_3_top) * ($circle_top - $point_3_top) / 1px + ($circle_left - $point_3_left) * ($circle_left - $point_3_left )/ 1px );
+    $bond3_degree: toDeg( atan( $point_3_top / $point_3_left) );
+
+    //point-outer-4和中心圆之间的连线 top:0 left:0  width:141.4px 135deg
+    $point_4_top: $RB-baseLength * 50;   $point_4_left:  -$RB-baseLength * 50;
+    $bond4_center_length: sqrt(($circle_top - $point_4_top) * ($circle_top - $point_4_top) / 1px + ($circle_left - $point_4_left) * ($circle_left - $point_4_left )/ 1px );
+    $bond4_degree: toDeg( atan( $point_4_top / $point_4_left) ) + 180deg;
+
+    //point-outer-5和中心圆之间的连线 top:0 left:0  width:170.8px -159.4deg
+    $point_5_top: -$RB-baseLength * 30;   $point_5_left:  -$RB-baseLength * 80;
+    $bond5_center_length: sqrt(($circle_top - $point_5_top) * ($circle_top - $point_5_top) / 1px + ($circle_left - $point_5_left) * ($circle_left - $point_5_left )/ 1px );
+    $bond5_degree: toDeg( atan( $point_5_top/$point_5_left) ) + 180deg;
+
+    //bond_-3-4圆3和圆4之间的连线top：100 left：-100 width：189.8 rotate：18.4
+    $bond-3-4_length: sqrt(($point_3_top - $point_4_top) * ($point_3_top - $point_4_top) / 1px + ($point_3_left - $point_4_left) * ($point_3_left - $point_4_left )/ 1px );
+    $bond-3-4_degree: toDeg( atan( ($point_3_top - $point_4_top) / ($point_3_left - $point_4_left) ) );
+
+    //bond_-2-A圆2和外部之间的连线top：-40 left：80 width：80  rotate：-60
+    $bond_-2-A_top: $RB-baseLength * 50;   $bond_-3-4_top: -$RB-baseLength * 50;
+    $bond-2-A_length: sqrt(($point_3_top - $point_4_top) * ($point_3_top - $point_4_top) / 1px + ($point_3_left - $point_4_left) * ($point_3_left - $point_4_left )/ 1px );
+    $bond-2-A_degree: toDeg( atan( ($point_3_top - $point_4_top) / ($point_3_left - $point_4_left) ) );
+
+    position: fixed;
+    bottom: $RB-bottom; right: $RB-right;
+    &__point-center {
+      position: absolute;
+      top: $center_top;
+      left: $center_left;
+      @include halfPie($RB-baseLength * 7 , lighten($lighten-grey, 9));
+    }
+    &__point-outer{
+      &-1{@include dot($RB-baseLength * 5 , $point_1_top, $point_1_left, lighten($lighten-grey, 10));}
+      &-2{@include dot($RB-baseLength * 3, $point_2_left, $point_2_top, lighten($lighten-grey, 10));}
+      &-3{@include dot($RB-baseLength * 2.5, $point_3_left, $point_3_top, lighten($lighten-red, 3));}
+      &-4{@include dot($RB-baseLength * 2.5, $point_4_left, $point_4_top, lighten($lighten-grey, 9));}
+      &-5{@include dot($RB-baseLength * 5, $point_5_left, $point_5_top, lighten($lighten-grey, 14));}
+    }
+    &__bond_center-outer{
+      &-1{@include line($RB-baseLength, $bond1_center_length / $RB-baseLength, -$bond1_degree, 0, 0, lighten($lighten-grey, 12));z-index:-1;}
+      &-2{@include line($RB-baseLength, $bond2_center_length / $RB-baseLength, $bond2_degree, 0, 0, lighten($lighten-grey, 12));z-index:-1;}
+      &-3{@include line($RB-baseLength, $bond3_center_length / $RB-baseLength, $bond3_degree, 0, 0, lighten($lighten-grey, 12));z-index:-1;}
+      &-4{@include line($RB-baseLength, $bond4_center_length / $RB-baseLength, $bond4_degree, 0, 0, lighten($lighten-grey, 12));z-index:-1;}
+      &-5{@include line($RB-baseLength, $bond5_center_length / $RB-baseLength, $bond5_degree, 0, 0, lighten($lighten-grey, 12));z-index:-1;}
+    }
+    &__bond_outer{
+      &-3-4{@include line($RB-baseLength, $bond-3-4_length / $RB-baseLength, $bond-3-4_degree, $point_4_left / $RB-baseLength, $point_4_top / $RB-baseLength, lighten($lighten-grey, 12));z-index:-1;}
+      &-2-A{@include line($RB-baseLength, 40, -60deg, $point_2_left / $RB-baseLength, $point_2_top / $RB-baseLength, lighten($lighten-grey, 12));z-index:-1;}
+      &-2-B{@include line($RB-baseLength, 40, 30deg, $point_2_left / $RB-baseLength, $point_2_top / $RB-baseLength, lighten($lighten-grey, 12));z-index:-1;}
+    }
+  }
+  #lb {
+    //中心圆top和left 以及 圆心的坐标
+    $center_top: -12 * $LB-baseLength;  $center_left: -12 * $LB-baseLength;
+    $circle_top: $center_top + 24px;   $circle_left: $center_left + 24px;
+
+    //point-outer-1和中心圆之间的连线 top:0 left:0  width:120px
+    $point_1_top: - $LB-baseLength * 20;   $point_1_left: $LB-baseLength * 26;
+    $point_outer_1_top: $point_1_top + 8px;   $point_outer_1_left: $point_1_left + 8px;
+    $bond1_center_length: sqrt(($circle_top - $point_outer_1_top) * ($circle_top - $point_outer_1_top) / 1px + ($circle_left - $point_outer_1_left) * ($circle_left - $point_outer_1_left )/ 1px ) - 8px;
+    $bond1_degree: toDeg( atan( $point_outer_1_top / $point_outer_1_left) );
+
+    //point-outer-2和中心圆之间的连线
+    $point_2_top: $LB-baseLength * 26;   $point_2_left:  -$LB-baseLength * 15;
+    $bond2_center_length: sqrt(($circle_top - $point_2_top) * ($circle_top - $point_2_top) / 1px + ($circle_left - $point_2_left) * ($circle_left - $point_2_left )/ 1px );
+    $bond2_degree: toDeg( atan( $point_2_top / $point_2_left) ) + 180deg;
+
+    //point-outer-3和中心圆之间的连线
+    $point_3_top: - $LB-baseLength * 15;   $point_3_left:  -$LB-baseLength * 30;
+    $bond3_center_length: sqrt(($circle_top - $point_3_top) * ($circle_top - $point_3_top) / 1px + ($circle_left - $point_3_left) * ($circle_left - $point_3_left )/ 1px );
+    $bond3_degree: toDeg( atan( $point_3_top / $point_3_left) ) + 180deg;
+
+    position: fixed;
+    bottom: $LB-bottom; left: $LB-left;
+    &__point-center {
+      position: absolute;
+      top: $center_top;
+      left: $center_left;
+      width: 24 * $LB-baseLength;
+      height: 24 * $LB-baseLength;
+      background: lighten($LB-color, 14.4);
+    }
+    &__point-outer{
+      &-1{
+        position: absolute;
+        top: $point_1_top;  left: $point_1_left;
+        @include halfPie($LB-baseLength * 4, lighten($LB-color, 8));
+        transform: rotate( -72deg )
+      }
+      &-2{@include dot( $LB-baseLength * 6, $point_2_left, $point_2_top, lighten($LB-color, 12));}
+      &-3{@include dot( $LB-baseLength * 3, $point_3_left, $point_3_top, lighten($LB-color, 8));}
+    }
+    &__bond_center-outer{
+        &-1{@include line($LB-baseLength * 1, $bond1_center_length / $LB-baseLength, $bond1_degree, 0, 0, lighten($LB-color, 8));z-index:-1;}
+        &-2{@include line($LB-baseLength * 1, $bond2_center_length / $LB-baseLength, $bond2_degree, 0, 0, transparent);z-index:-1;
+            background: repeating-linear-gradient(90deg, lighten($LB-color, 8) 0, lighten($LB-color, 8) 10%, transparent 0, transparent 20%) 0 / 3em 3em;}
+        &-3{@include line($LB-baseLength * 1, $bond3_center_length / $LB-baseLength, $bond3_degree, 0, 0, transparent);z-index:-1;
+            background:repeating-linear-gradient(90deg, #ebced2 0, #ebced2 10%, transparent 0, transparent 20%) 0 / 3em 3em;}
+    }
+  }
+}
